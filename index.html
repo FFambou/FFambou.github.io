@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exploration Interactive: Automatisation de la Rédaction de Contrats</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Application Structure Plan: 
+        A single-page application with a fixed sidebar navigation for main thematic sections derived from the report.
+        Each section will present information using cards, accordions, and interactive charts to enhance understanding and exploration.
+        The flow is designed to guide the user from understanding the problem (manual contract drafting) to exploring solutions (low-code, specialized, custom), understanding AI's role, considering implementation factors, and finally, reviewing conclusions.
+        This structure was chosen for its clarity, ease of navigation for a dense report, and ability to isolate complex topics into digestible chunks, promoting better usability.
+    -->
+    <!-- Visualization & Content Choices:
+        - Introduction: Overview and call to action. Goal: Orient. Method: Text.
+        - Le Défi Actuel: Icons & short texts. Goal: Inform. Method: HTML/CSS. Interaction: Visual. Justification: Quickly convey pain points.
+        - Principes Clés: Interactive cards/lists. Goal: Organize/Inform. Method: HTML/CSS + JS. Interaction: Click to expand. Justification: Digestible info.
+        - Panorama des Solutions:
+            - Low-Code: Cards + Bar Chart (Chart.js). Goal: Compare. Interaction: Tooltips. Justification: Visual feature comparison.
+            - Specialized: Cards + Radar Chart (Chart.js). Goal: Compare. Interaction: Tooltips. Justification: Strengths across dimensions.
+            - Custom Dev: Expandable sections. Goal: Detail. Interaction: Expand/collapse. Justification: Manage density.
+        - Rôle de l'IA: HTML/CSS diagrams. Goal: Explain. Interaction: Hover (potential). Justification: Visualizing AI impact.
+        - Considérations d'Implémentation: Accordions, illustrative cost visualizer. Goal: Guide/Inform. Interaction: Expand, slider. Justification: Structured details, simplified cost concept.
+        - Conclusion: Checklist/list. Goal: Summarize/Action. Method: Text.
+        All text and data are extracted and summarized from the provided French report.
+        CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
+    <style>
+        body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
+        .sidebar-link { transition: all 0.3s ease; }
+        .sidebar-link.active, .sidebar-link:hover { background-color: #E0E7FF; color: #3730A3; }
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+        .tab-button { transition: all 0.3s ease; }
+        .tab-button.active { border-color: #4F46E5; color: #4F46E5; background-color: #EEF2FF; }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 350px; max-height: 400px; }
+        @media (min-width: 768px) { .chart-container { height: 400px; max-height: 450px; } }
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div class="flex flex-col md:flex-row min-h-screen">
+        <aside class="w-full md:w-64 bg-slate-800 text-slate-100 p-6 space-y-4 shadow-lg md:sticky md:top-0 md:h-screen md:overflow-y-auto">
+            <h1 class="text-2xl font-semibold text-center text-indigo-300">Automatisation&nbsp;Contrats</h1>
+            <nav class="space-y-2">
+                <a href="#accueil" class="sidebar-link block py-2.5 px-4 rounded hover:bg-slate-700 active">Accueil</a>
+                <a href="#defi" class="sidebar-link block py-2.5 px-4 rounded hover:bg-slate-700">Le Défi Actuel</a>
+                <a href="#principes" class="sidebar-link block py-2.5 px-4 rounded hover:bg-slate-700">Principes Clés</a>
+                <a href="#solutions" class="sidebar-link block py-2.5 px-4 rounded hover:bg-slate-700">Panorama des Solutions</a>
+                <a href="#ia" class="sidebar-link block py-2.5 px-4 rounded hover:bg-slate-700">Rôle de l'IA</a>
+                <a href="#implementation" class="sidebar-link block py-2.5 px-4 rounded hover:bg-slate-700">Considérations</a>
+                <a href="#conclusion" class="sidebar-link block py-2.5 px-4 rounded hover:bg-slate-700">Conclusion & Recommandations</a>
+            </nav>
+        </aside>
+
+        <main class="flex-1 p-6 md:p-10 bg-slate-100 overflow-y-auto">
+            
+            <section id="accueil" class="content-section active space-y-6">
+                <div class="bg-white p-8 rounded-xl shadow-xl">
+                    <h2 class="text-3xl font-bold text-indigo-700 mb-6">Bienvenue !</h2>
+                    <p class="text-lg text-slate-700 mb-4">
+                        Cette application interactive a été conçue pour vous aider à explorer le rapport d'analyse sur l'automatisation de la rédaction de contrats. 
+                        Elle vise à simplifier la compréhension des défis actuels, des principes fondamentaux de l'automatisation, des diverses solutions techniques disponibles, du rôle de l'intelligence artificielle, et des considérations clés pour une implémentation réussie.
+                    </p>
+                    <p class="text-lg text-slate-700 mb-6">
+                        Naviguez à travers les sections à l'aide du menu latéral pour découvrir comment transformer un processus manuel complexe et chronophage en une opération stratégique, efficace et sécurisée.
+                    </p>
+                    <button onclick="navigateToSection('#solutions')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300">
+                        Explorez les Solutions Maintenant
+                    </button>
+                </div>
+            </section>
+
+            <section id="defi" class="content-section space-y-6">
+                <div class="bg-white p-8 rounded-xl shadow-xl">
+                    <h2 class="text-3xl font-bold text-indigo-700 mb-6">Le Défi Actuel de la Rédaction Manuelle</h2>
+                    <p class="text-lg text-slate-700 mb-8">
+                        La rédaction manuelle de contrats, en particulier pour des modèles volumineux comme celui de 100 pages basé sur Excel, présente de multiples défis qui impactent l'efficacité opérationnelle et la gestion des risques. Cette section met en lumière ces difficultés.
+                    </p>
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="bg-rose-50 p-6 rounded-lg shadow-md border-l-4 border-rose-500">
+                            <h3 class="text-xl font-semibold text-rose-700 mb-2">⏱️ Processus Chronophage</h3>
+                            <p class="text-slate-600">La complétion manuelle de documents volumineux et le transfert de données Excel vers Word sont extrêmement lents, mobilisant des ressources précieuses.</p>
+                        </div>
+                        <div class="bg-amber-50 p-6 rounded-lg shadow-md border-l-4 border-amber-500">
+                            <h3 class="text-xl font-semibold text-amber-700 mb-2">⚠️ Risque d'Erreurs Élevé</h3>
+                            <p class="text-slate-600">La saisie manuelle est sujette aux fautes de frappe, à l'utilisation d'informations obsolètes et aux incohérences, pouvant entraîner des litiges.</p>
+                        </div>
+                        <div class="bg-sky-50 p-6 rounded-lg shadow-md border-l-4 border-sky-500">
+                            <h3 class="text-xl font-semibold text-sky-700 mb-2">🧩 Complexité des Modèles</h3>
+                            <p class="text-slate-600">Un modèle de 100 pages implique une logique conditionnelle et un contenu dynamique importants, difficiles à gérer manuellement.</p>
+                        </div>
+                        <div class="bg-lime-50 p-6 rounded-lg shadow-md border-l-4 border-lime-500">
+                            <h3 class="text-xl font-semibold text-lime-700 mb-2">🔗 Intégration Limitée</h3>
+                            <p class="text-slate-600">La simple utilisation d'Excel comme source de données est un goulot d'étranglement, avec des capacités d'intégration limitées de Word.</p>
+                        </div>
+                        <div class="bg-violet-50 p-6 rounded-lg shadow-md border-l-4 border-violet-500">
+                            <h3 class="text-xl font-semibold text-violet-700 mb-2">📉 Manque de Standardisation</h3>
+                            <p class="text-slate-600">Difficile de garantir la cohérence du langage, du formatage et l'utilisation des clauses à jour sur tous les contrats.</p>
+                        </div>
+                        <div class="bg-slate-100 p-6 rounded-lg shadow-md border-l-4 border-slate-400">
+                            <h3 class="text-xl font-semibold text-slate-700 mb-2">🔄 Évolutivité Restreinte</h3>
+                            <p class="text-slate-600">Les processus manuels peinent à gérer une augmentation du volume de contrats sans dégradation de la qualité ou des délais.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="principes" class="content-section space-y-6">
+                <div class="bg-white p-8 rounded-xl shadow-xl">
+                    <h2 class="text-3xl font-bold text-indigo-700 mb-6">Principes Clés de l'Automatisation Documentaire</h2>
+                    <p class="text-lg text-slate-700 mb-8">
+                        L'automatisation des processus documentaires offre des avantages stratégiques considérables et repose sur des fonctionnalités essentielles pour être efficace. Explorez ces aspects fondamentaux.
+                    </p>
+
+                    <div class="mb-8">
+                        <h3 class="text-2xl font-semibold text-slate-700 mb-4">Avantages Stratégiques</h3>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div class="bg-teal-50 p-4 rounded-lg shadow accordion-item">
+                                <button class="w-full text-left font-medium text-teal-700 flex justify-between items-center accordion-header">Efficacité et Gain de Temps <span class="transform transition-transform duration-300">+</span></button>
+                                <div class="accordion-content mt-2 text-slate-600">Réduction drastique du temps de rédaction (jours → minutes), libérant les équipes pour des tâches à plus forte valeur ajoutée.</div>
+                            </div>
+                            <div class="bg-teal-50 p-4 rounded-lg shadow accordion-item">
+                                <button class="w-full text-left font-medium text-teal-700 flex justify-between items-center accordion-header">Précision et Réduction des Erreurs <span class="transform transition-transform duration-300">+</span></button>
+                                <div class="accordion-content mt-2 text-slate-600">Élimination de la saisie manuelle, garantissant l'exactitude des données et la cohérence du langage.</div>
+                            </div>
+                            <div class="bg-teal-50 p-4 rounded-lg shadow accordion-item">
+                                <button class="w-full text-left font-medium text-teal-700 flex justify-between items-center accordion-header">Conformité et Gestion des Risques <span class="transform transition-transform duration-300">+</span></button>
+                                <div class="accordion-content mt-2 text-slate-600">Respect des exigences légales, identification des risques, utilisation de clauses standardisées et à jour.</div>
+                            </div>
+                            <div class="bg-teal-50 p-4 rounded-lg shadow accordion-item">
+                                <button class="w-full text-left font-medium text-teal-700 flex justify-between items-center accordion-header">Évolutivité <span class="transform transition-transform duration-300">+</span></button>
+                                <div class="accordion-content mt-2 text-slate-600">Gestion aisée d'un volume croissant de contrats sans effort supplémentaire.</div>
+                            </div>
+                            <div class="bg-teal-50 p-4 rounded-lg shadow accordion-item">
+                                <button class="w-full text-left font-medium text-teal-700 flex justify-between items-center accordion-header">Cohérence et Standardisation <span class="transform transition-transform duration-300">+</span></button>
+                                <div class="accordion-content mt-2 text-slate-600">Chaque document respecte le même format et l'image de marque de l'entreprise.</div>
+                            </div>
+                             <div class="bg-teal-50 p-4 rounded-lg shadow accordion-item">
+                                <button class="w-full text-left font-medium text-teal-700 flex justify-between items-center accordion-header">Meilleure Collaboration et Visibilité <span class="transform transition-transform duration-300">+</span></button>
+                                <div class="accordion-content mt-2 text-slate-600">Stockage centralisé facilitant le suivi des obligations et l'accès aux documents.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-2xl font-semibold text-slate-700 mb-4">Fonctionnalités Essentielles</h3>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div class="bg-sky-50 p-4 rounded-lg shadow accordion-item">
+                                <button class="w-full text-left font-medium text-sky-700 flex justify-between items-center accordion-header">Bibliothèque de Modèles et Clauses <span class="transform transition-transform duration-300">+</span></button>
+                                <div class="accordion-content mt-2 text-slate-600">Accès à des modèles pré-approuvés et clauses réutilisables.</div>
+                            </div>
+                            <div class="bg-sky-50 p-4 rounded-lg shadow accordion-item">
+                                <button class="w-full text-left font-medium text-sky-700 flex justify-between items-center accordion-header">Intégration de Données <span class="transform transition-transform duration-300">+</span></button>
+                                <div class="accordion-content mt-2 text-slate-600">Extraction et fusion automatique de données depuis Excel, CRM, ERP.</div>
+                            </div>
+                            <div class="bg-sky-50 p-4 rounded-lg shadow accordion-item">
+                                <button class="w-full text-left font-medium text-sky-700 flex justify-between items-center accordion-header">Logique Conditionnelle et Règles <span class="transform transition-transform duration-300">+</span></button>
+                                <div class="accordion-content mt-2 text-slate-600">Génération dynamique de contenu (sections, clauses) basée sur des critères.</div>
+                            </div>
+                            <div class="bg-sky-50 p-4 rounded-lg shadow accordion-item">
+                                <button class="w-full text-left font-medium text-sky-700 flex justify-between items-center accordion-header">Tables et Boucles Dynamiques <span class="transform transition-transform duration-300">+</span></button>
+                                <div class="accordion-content mt-2 text-slate-600">Génération de listes et tableaux avec un nombre variable de lignes/colonnes.</div>
+                            </div>
+                            <div class="bg-sky-50 p-4 rounded-lg shadow accordion-item">
+                                <button class="w-full text-left font-medium text-sky-700 flex justify-between items-center accordion-header">Contrôle de Version <span class="transform transition-transform duration-300">+</span></button>
+                                <div class="accordion-content mt-2 text-slate-600">Suivi des modifications des documents et modèles.</div>
+                            </div>
+                            <div class="bg-sky-50 p-4 rounded-lg shadow accordion-item">
+                                <button class="w-full text-left font-medium text-sky-700 flex justify-between items-center accordion-header">Workflows d'Approbation <span class="transform transition-transform duration-300">+</span></button>
+                                <div class="accordion-content mt-2 text-slate-600">Routage automatisé pour examen et signature.</div>
+                            </div>
+                            <div class="bg-sky-50 p-4 rounded-lg shadow accordion-item">
+                                <button class="w-full text-left font-medium text-sky-700 flex justify-between items-center accordion-header">Signature Électronique (e-Signature) <span class="transform transition-transform duration-300">+</span></button>
+                                <div class="accordion-content mt-2 text-slate-600">Intégration pour signature rapide et sécurisée.</div>
+                            </div>
+                            <div class="bg-sky-50 p-4 rounded-lg shadow accordion-item">
+                                <button class="w-full text-left font-medium text-sky-700 flex justify-between items-center accordion-header">Stockage Centralisé Sécurisé <span class="transform transition-transform duration-300">+</span></button>
+                                <div class="accordion-content mt-2 text-slate-600">Référentiel unique avec contrôles d'accès granulaires.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="solutions" class="content-section space-y-6">
+                <div class="bg-white p-8 rounded-xl shadow-xl">
+                    <h2 class="text-3xl font-bold text-indigo-700 mb-6">Panorama des Solutions Techniques</h2>
+                    <p class="text-lg text-slate-700 mb-8">
+                        Le marché offre une gamme variée de solutions pour automatiser la rédaction de contrats. Cette section vous guide à travers les principales catégories d'outils, analysant leurs forces, faiblesses et pertinence pour des modèles complexes.
+                    </p>
+
+                    <div class="mb-6 border-b border-slate-300">
+                        <nav class="flex space-x-4" aria-label="Tabs">
+                            <button data-tab="lowcode" class="tab-button solutions-tab-button active font-medium py-3 px-4 border-b-2 border-transparent hover:border-slate-400 focus:outline-none">
+                                Low-Code / No-Code
+                            </button>
+                            <button data-tab="specialized" class="tab-button solutions-tab-button font-medium py-3 px-4 border-b-2 border-transparent hover:border-slate-400 focus:outline-none">
+                                Plateformes Spécialisées
+                            </button>
+                            <button data-tab="customdev" class="tab-button solutions-tab-button font-medium py-3 px-4 border-b-2 border-transparent hover:border-slate-400 focus:outline-none">
+                                Développement Personnalisé
+                            </button>
+                        </nav>
+                    </div>
+
+                    <div id="lowcode" class="solutions-tab-content active space-y-6">
+                        <h3 class="text-2xl font-semibold text-slate-700">Plateformes Low-Code / No-Code</h3>
+                        <p class="text-slate-600">Ces plateformes visent à réduire le codage manuel, permettant une mise en œuvre rapide. Cependant, elles peuvent présenter des limitations pour des documents très complexes.</p>
+                        
+                        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                            <div class="bg-slate-50 p-6 rounded-lg shadow-md border-t-4 border-indigo-400">
+                                <h4 class="text-xl font-semibold text-indigo-700 mb-2">Microsoft Power Automate</h4>
+                                <p class="text-sm text-slate-600 mb-1"><strong>Intégration Excel:</strong> Native.</p>
+                                <p class="text-sm text-slate-600 mb-1"><strong>Modèle Complexe (100p):</strong> Limitations (taille 10Mo, contrôles non supportés).</p>
+                                <p class="text-sm text-slate-600 mb-1"><strong>Logique Conditionnelle:</strong> Limitée.</p>
+                                <p class="text-sm text-slate-600 mb-1"><strong>Verdict Contrat Complexe:</strong> Risqué, probablement inadapté.</p>
+                            </div>
+                            <div class="bg-slate-50 p-6 rounded-lg shadow-md border-t-4 border-teal-400">
+                                <h4 class="text-xl font-semibold text-teal-700 mb-2">n8n</h4>
+                                <p class="text-sm text-slate-600 mb-1"><strong>Intégration Excel:</strong> Native.</p>
+                                <p class="text-sm text-slate-600 mb-1"><strong>Modèle Complexe (100p):</strong> Via librairie externe (ex: docxtemplater).</p>
+                                <p class="text-sm text-slate-600 mb-1"><strong>Logique Conditionnelle:</strong> Via librairie externe.</p>
+                                <p class="text-sm text-slate-600 mb-1"><strong>Verdict Contrat Complexe:</strong> Flexible, mais effort de dev accru pour Word.</p>
+                            </div>
+                            <div class="bg-slate-50 p-6 rounded-lg shadow-md border-t-4 border-sky-400">
+                                <h4 class="text-xl font-semibold text-sky-700 mb-2">Langflow</h4>
+                                <p class="text-sm text-slate-600 mb-1"><strong>Intégration Excel:</strong> Via API/intégration.</p>
+                                <p class="text-sm text-slate-600 mb-1"><strong>Modèle Complexe (100p):</strong> Non natif (orchestration IA).</p>
+                                <p class="text-sm text-slate-600 mb-1"><strong>Logique Conditionnelle:</strong> Via orchestration IA.</p>
+                                <p class="text-sm text-slate-600 mb-1"><strong>Verdict Contrat Complexe:</strong> Orchestrateur IA, nécessite outil de génération doc tiers.</p>
+                            </div>
+                        </div>
+                        <div class="chart-container bg-white p-4 rounded-lg shadow-inner">
+                            <canvas id="lowCodeChart"></canvas>
+                        </div>
+                         <p class="text-sm text-slate-500 mt-4 text-center">Note: Les scores du graphique sont basés sur l'analyse qualitative du rapport.</p>
+                    </div>
+
+                    <div id="specialized" class="solutions-tab-content space-y-6">
+                        <h3 class="text-2xl font-semibold text-slate-700">Plateformes Spécialisées (CLM / Génération Documentaire)</h3>
+                        <p class="text-slate-600">Conçues pour la génération de documents et la gestion du cycle de vie des contrats, offrant des fonctionnalités avancées pour les modèles complexes.</p>
+                        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                            <div class="bg-slate-50 p-6 rounded-lg shadow-md border-t-4 border-purple-400">
+                                <h4 class="text-xl font-semibold text-purple-700 mb-2">DocuSign Gen (pour Salesforce)</h4>
+                                <p class="text-sm text-slate-600">Logique conditionnelle avancée, tables dynamiques. Fortement lié à Salesforce. Coût potentiellement élevé.</p>
+                            </div>
+                             <div class="bg-slate-50 p-6 rounded-lg shadow-md border-t-4 border-pink-400">
+                                <h4 class="text-xl font-semibold text-pink-700 mb-2">Conga Composer</h4>
+                                <p class="text-sm text-slate-600">Expressions IF complexes, clauses dynamiques. Souvent coûteux et complexe à implémenter.</p>
+                            </div>
+                            <div class="bg-slate-50 p-6 rounded-lg shadow-md border-t-4 border-emerald-400">
+                                <h4 class="text-xl font-semibold text-emerald-700 mb-2">Plumsail Documents</h4>
+                                <p class="text-sm text-slate-600">Bon support pour listes, boucles, masquage conditionnel. Coût plus abordable. S'intègre avec Power Automate.</p>
+                            </div>
+                            <div class="bg-slate-50 p-6 rounded-lg shadow-md border-t-4 border-cyan-400">
+                                <h4 class="text-xl font-semibold text-cyan-700 mb-2">Formstack</h4>
+                                <p class="text-sm text-slate-600">Génère depuis formulaires/CRM, supporte logique conditionnelle et e-signature.</p>
+                            </div>
+                            <div class="bg-slate-50 p-6 rounded-lg shadow-md border-t-4 border-amber-400">
+                                <h4 class="text-xl font-semibold text-amber-700 mb-2">Box Doc Gen</h4>
+                                <p class="text-sm text-slate-600">Génère depuis Box Forms/JSON, logique conditionnelle, tables dynamiques, add-in Word.</p>
+                            </div>
+                        </div>
+                        <div class="chart-container bg-white p-4 rounded-lg shadow-inner">
+                            <canvas id="specializedChart"></canvas>
+                        </div>
+                        <p class="text-sm text-slate-500 mt-4 text-center">Note: Les scores du graphique sont basés sur l'analyse qualitative du rapport.</p>
+                    </div>
+
+                    <div id="customdev" class="solutions-tab-content space-y-6">
+                        <h3 class="text-2xl font-semibold text-slate-700">Développement Personnalisé avec Python</h3>
+                        <p class="text-slate-600">Offre le plus haut degré de flexibilité et de contrôle, mais implique des coûts et des délais de développement plus importants.</p>
+                        <div class="bg-slate-50 p-6 rounded-lg shadow-md">
+                            <h4 class="text-xl font-semibold text-gray-700 mb-3">Bibliothèques Clés :</h4>
+                            <ul class="list-disc list-inside space-y-2 text-slate-600 mb-4">
+                                <li><strong>python-docx:</strong> Création et modification de .docx.</li>
+                                <li><strong>docxtpl:</strong> Moteur de templating Jinja2 pour Word (logique conditionnelle, boucles).</li>
+                                <li><strong>IronXL / openpyxl / pandas:</strong> Lecture de fichiers Excel.</li>
+                            </ul>
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <div class="bg-green-50 p-4 rounded-lg border-l-4 border-green-500">
+                                    <h5 class="font-semibold text-green-700 mb-1">Avantages :</h5>
+                                    <ul class="list-disc list-inside text-sm text-slate-600">
+                                        <li>Flexibilité et contrôle total</li>
+                                        <li>Pas de dépendance fournisseur</li>
+                                        <li>Intégration profonde sur mesure</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-red-50 p-4 rounded-lg border-l-4 border-red-500">
+                                    <h5 class="font-semibold text-red-700 mb-1">Inconvénients :</h5>
+                                    <ul class="list-disc list-inside text-sm text-slate-600">
+                                        <li>Coût de développement initial élevé</li>
+                                        <li>Temps d'implémentation long</li>
+                                        <li>Maintenance continue requise</li>
+                                        <li>Responsabilité de la sécurité</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <p class="mt-4 text-slate-600"><strong>Verdict Contrat Complexe:</strong> Très viable pour une personnalisation extrême et des besoins uniques, si le budget et l'expertise sont disponibles.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="ia" class="content-section space-y-6">
+                <div class="bg-white p-8 rounded-xl shadow-xl">
+                    <h2 class="text-3xl font-bold text-indigo-700 mb-6">Le Rôle Stratégique de l'Intelligence Artificielle (IA)</h2>
+                    <p class="text-lg text-slate-700 mb-8">
+                        L'IA transforme l'automatisation des contrats en une opération intelligente, allant bien au-delà de la simple fusion de données. Découvrez ses applications clés.
+                    </p>
+                    <div class="space-y-6">
+                        <div class="bg-sky-50 p-6 rounded-lg shadow-md border-l-4 border-sky-500">
+                            <h3 class="text-xl font-semibold text-sky-700 mb-2">Extraction et Validation Intelligente des Données</h3>
+                            <p class="text-slate-600">Le NLP et les agents IA extraient des données non structurées (texte, clauses, dates) de divers documents, les transforment en formats structurés et valident leur exactitude.</p>
+                        </div>
+                        <div class="bg-emerald-50 p-6 rounded-lg shadow-md border-l-4 border-emerald-500">
+                            <h3 class="text-xl font-semibold text-emerald-700 mb-2">Recommandation, Génération et Validation de Clauses</h3>
+                            <p class="text-slate-600">L'IA identifie, catégorise les clauses, détecte les incohérences, compare aux "playbooks" de l'entreprise, et suggère des révisions optimales pour assurer la conformité.</p>
+                        </div>
+                        <div class="bg-amber-50 p-6 rounded-lg shadow-md border-l-4 border-amber-500">
+                            <h3 class="text-xl font-semibold text-amber-700 mb-2">Analyse des Risques et Aide à la Décision</h3>
+                            <p class="text-slate-600">Évalue les risques potentiels en analysant les cas passés et les politiques, signale les termes non conformes, et aide à optimiser les stratégies de négociation.</p>
+                        </div>
+                        <div class="bg-indigo-50 p-6 rounded-lg shadow-md border-l-4 border-indigo-500">
+                            <h3 class="text-xl font-semibold text-indigo-700 mb-2">Gouvernance des Données Essentielle</h3>
+                            <p class="text-slate-600">L'efficacité de l'IA dépend fortement de la qualité des données d'entraînement. Une stratégie de nettoyage et de maintien de la qualité des données est cruciale.</p>
+                        </div>
+                    </div>
+                     <p class="text-md text-slate-600 mt-8">
+                        L'intégration de l'IA signifie non seulement remplir des champs, mais potentiellement générer dynamiquement des clauses, valider le contenu par rapport aux standards juridiques et signaler les risques. C'est une amélioration stratégique qui augmente l'intelligence du travail juridique.
+                    </p>
+                </div>
+            </section>
+
+            <section id="implementation" class="content-section space-y-6">
+                <div class="bg-white p-8 rounded-xl shadow-xl">
+                    <h2 class="text-3xl font-bold text-indigo-700 mb-6">Considérations Clés pour l'Implémentation</h2>
+                    <p class="text-lg text-slate-700 mb-8">
+                        Le choix et la mise en œuvre d'une solution d'automatisation impliquent une analyse approfondie de plusieurs facteurs critiques.
+                    </p>
+                    <div class="space-y-4">
+                        <div class="bg-slate-50 p-4 rounded-lg shadow accordion-item">
+                            <button class="w-full text-left font-medium text-slate-700 flex justify-between items-center accordion-header text-xl">Analyse Coût-Bénéfice <span class="transform transition-transform duration-300">+</span></button>
+                            <div class="accordion-content mt-2 text-slate-600 space-y-3">
+                                <p><strong>Solutions SaaS spécialisées:</strong> Coûts d'abonnement variables (ex: Plumsail abordable, Conga coûteux). Implémentation rapide, maintenance par le fournisseur.</p>
+                                <p><strong>Low-Code/No-Code:</strong> Coûts initiaux potentiellement plus bas, mais limitations pour la complexité et possibles coûts de licences premium.</p>
+                                <p><strong>Développement Personnalisé:</strong> Coûts initiaux et de maintenance élevés, mais flexibilité maximale. Justifié par la complexité et des besoins uniques.</p>
+                                <div class="mt-4">
+                                    <label for="solutionTypeCost" class="block text-sm font-medium text-slate-700">Type de solution (pour illustration des coûts relatifs) :</label>
+                                    <select id="solutionTypeCost" class="mt-1 block w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                        <option value="lowcode">Low-Code/No-Code</option>
+                                        <option value="saas">SaaS Spécialisé</option>
+                                        <option value="custom">Développement Personnalisé</option>
+                                    </select>
+                                    <div id="costVisualizer" class="mt-3 p-3 bg-indigo-50 rounded-md">
+                                        <p class="text-sm text-indigo-700"><strong>Coût Initial Relatif:</strong> <span id="initialCost">$$</span></p>
+                                        <p class="text-sm text-indigo-700"><strong>Coût Continu Relatif:</strong> <span id="ongoingCost">$$</span></p>
+                                    </div>
+                                    <p class="text-xs text-slate-500 mt-1">Ceci est une illustration grossière des coûts relatifs et ne reflète pas les prix exacts.</p>
+                                </div>
+                            </div>
+                        </div>
+                         <div class="bg-slate-50 p-4 rounded-lg shadow accordion-item">
+                            <button class="w-full text-left font-medium text-slate-700 flex justify-between items-center accordion-header text-xl">Sécurité et Conformité <span class="transform transition-transform duration-300">+</span></button>
+                            <div class="accordion-content mt-2 text-slate-600 space-y-2">
+                                <p><strong>Protection des Données:</strong> Chiffrement de bout en bout, stockage sécurisé.</p>
+                                <p><strong>Contrôles d'Accès:</strong> Gestion granulaire des permissions basée sur les rôles.</p>
+                                <p><strong>Pistes d'Audit:</strong> Suivi détaillé de toutes les modifications.</p>
+                                <p><strong>Conformité Réglementaire:</strong> Aide au maintien de la conformité (HIPAA, SOC2, RGPD) via des processus standardisés.</p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-lg shadow accordion-item">
+                            <button class="w-full text-left font-medium text-slate-700 flex justify-between items-center accordion-header text-xl">Évolutivité et Performance <span class="transform transition-transform duration-300">+</span></button>
+                            <div class="accordion-content mt-2 text-slate-600 space-y-2">
+                                <p><strong>Gestion des Volumes:</strong> Capacité à gérer des milliers de documents et une croissance future.</p>
+                                <p><strong>Performance:</strong> Vitesse de génération des documents, même pour des modèles complexes.</p>
+                                <p><strong>Intégration:</strong> Connexion transparente avec CRM, ERP, GED pour éviter les silos de données.</p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-lg shadow accordion-item">
+                            <button class="w-full text-left font-medium text-slate-700 flex justify-between items-center accordion-header text-xl">Maintenance et Gestion des Modèles <span class="transform transition-transform duration-300">+</span></button>
+                            <div class="accordion-content mt-2 text-slate-600 space-y-2">
+                                <p><strong>Standardisation:</strong> Normes claires pour la documentation, formatage, conventions.</p>
+                                <p><strong>Contrôle de Version:</strong> Suivi des modifications des modèles, possibilité de retour arrière.</p>
+                                <p><strong>Mises à Jour Régulières:</strong> Examen et adaptation des modèles aux changements légaux/commerciaux.</p>
+                                <p><strong>Formation des Utilisateurs:</strong> Essentielle pour une utilisation efficace de l'outil.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="conclusion" class="content-section space-y-6">
+                <div class="bg-white p-8 rounded-xl shadow-xl">
+                    <h2 class="text-3xl font-bold text-indigo-700 mb-6">Conclusion et Recommandations Actionnables</h2>
+                    <p class="text-lg text-slate-700 mb-8">
+                        L'automatisation de la rédaction de contrats complexes est un impératif stratégique. Voici une synthèse des conclusions du rapport et les recommandations pour guider votre démarche.
+                    </p>
+                    <div class="space-y-6">
+                        <div class="bg-green-50 p-6 rounded-lg shadow-md border-l-4 border-green-600">
+                            <h3 class="text-xl font-semibold text-green-700 mb-3">Recommandations Clés :</h3>
+                            <ul class="list-decimal list-inside space-y-3 text-slate-700">
+                                <li>
+                                    <strong>Prioriser une Plateforme Spécialisée de Génération Documentaire/CLM :</strong>
+                                    Pour un modèle de 100 pages, ces solutions (ex: Plumsail, DocuSign Gen, Conga) sont mieux équipées pour la logique conditionnelle avancée et les tables dynamiques.
+                                    <p class="text-sm text-slate-500 pl-4"><em>Action : Évaluer Plumsail pour un équilibre coût/fonctionnalités, ou DocuSign/Conga si forte intégration Salesforce et budget conséquent.</em></p>
+                                </li>
+                                <li>
+                                    <strong>Évaluer l'Écosystème Existant :</strong>
+                                    Déterminer si un CRM (ex: Salesforce) ou ERP est utilisé, car cela influence le choix de la solution et facilite l'intégration des données au-delà d'Excel.
+                                    <p class="text-sm text-slate-500 pl-4"><em>Action : Cartographier les systèmes de gestion de données existants.</em></p>
+                                </li>
+                                <li>
+                                    <strong>Considérer le Développement Personnalisé pour des Besoins Uniques :</strong>
+                                    Si les exigences de formatage/logique sont extrêmes et que l'expertise/budget Python est disponible, une solution sur mesure (ex: avec `docxtpl`) est viable.
+                                    <p class="text-sm text-slate-500 pl-4"><em>Action : Analyser en détail les exigences du modèle Word pour justifier cette option.</em></p>
+                                </li>
+                                <li>
+                                    <strong>Planifier l'Intégration de l'IA comme Évolution Future :</strong>
+                                    L'IA offre une valeur stratégique (analyse, recommandation de clauses). La qualité des données est un prérequis.
+                                    <p class="text-sm text-slate-500 pl-4"><em>Action : Prioriser le nettoyage et la standardisation des données. Envisager une feuille de route IA post-automatisation de base.</em></p>
+                                </li>
+                                <li>
+                                    <strong>Mettre en Place une Gouvernance Robuste :</strong>
+                                    Essentiel pour la sécurité, conformité, contrôle de version et maintenance des modèles, quelle que soit la solution.
+                                    <p class="text-sm text-slate-500 pl-4"><em>Action : Établir des normes, processus de révision, protocoles de sécurité et former les équipes.</em></p>
+                                </li>
+                            </ul>
+                        </div>
+                        <p class="text-md text-slate-600">
+                            En conclusion, les plateformes low-code/no-code standards montrent leurs limites pour ce cas d'usage. L'investissement dans une solution spécialisée ou un développement sur mesure, potentiellement enrichi par l'IA, est justifié par la complexité et les enjeux stratégiques de l'automatisation des contrats volumineux.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+<script>
+    const sidebarLinks = document.querySelectorAll('.sidebar-link');
+    const contentSections = document.querySelectorAll('.content-section');
+    const solutionsTabButtons = document.querySelectorAll('.solutions-tab-button');
+    const solutionsTabContents = document.querySelectorAll('.solutions-tab-content');
+    const accordionItems = document.querySelectorAll('.accordion-item');
+
+    function navigateToSection(hash) {
+        sidebarLinks.forEach(link => {
+            if (link.getAttribute('href') === hash) {
+                link.classList.add('active', 'bg-indigo-600', 'text-white');
+                link.classList.remove('hover:bg-slate-700');
+            } else {
+                link.classList.remove('active', 'bg-indigo-600', 'text-white');
+                link.classList.add('hover:bg-slate-700');
+            }
+        });
+        contentSections.forEach(section => {
+            if ('#' + section.id === hash) {
+                section.classList.add('active');
+            } else {
+                section.classList.remove('active');
+            }
+        });
+        window.scrollTo(0,0); // Scroll to top of new section
+    }
+    
+    sidebarLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetId = link.getAttribute('href');
+            navigateToSection(targetId);
+            history.pushState(null, null, targetId);
+        });
+    });
+
+    // Accordion functionality
+    accordionItems.forEach(item => {
+        const header = item.querySelector('.accordion-header');
+        const content = item.querySelector('.accordion-content');
+        const icon = header.querySelector('span');
+
+        header.addEventListener('click', () => {
+            const isOpen = content.style.maxHeight && content.style.maxHeight !== "0px";
+            // Close all other accordions in the same group (optional, if needed)
+            // item.closest('.grid, .space-y-4').querySelectorAll('.accordion-item').forEach(otherItem => {
+            //     if (otherItem !== item) {
+            //         otherItem.querySelector('.accordion-content').style.maxHeight = null;
+            //         otherItem.querySelector('.accordion-header span').style.transform = 'rotate(0deg)';
+            //     }
+            // });
+            
+            if (isOpen) {
+                content.style.maxHeight = null;
+                if(icon) icon.style.transform = 'rotate(0deg)';
+            } else {
+                content.style.maxHeight = content.scrollHeight + "px";
+                if(icon) icon.style.transform = 'rotate(45deg)';
+            }
+        });
+    });
+
+    // Solutions Tabs
+    solutionsTabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const tabId = button.dataset.tab;
+
+            solutionsTabButtons.forEach(btn => btn.classList.remove('active', 'border-indigo-500', 'text-indigo-600', 'bg-indigo-100'));
+            button.classList.add('active', 'border-indigo-500', 'text-indigo-600', 'bg-indigo-100');
+
+            solutionsTabContents.forEach(content => {
+                if (content.id === tabId) {
+                    content.classList.add('active');
+                    content.classList.remove('hidden'); // Ensure it's not hidden if previously so
+                } else {
+                    content.classList.remove('active');
+                    content.classList.add('hidden');
+                }
+            });
+             // Re-initialize charts if they are in the newly active tab and not yet drawn
+            if (tabId === 'lowcode' && !window.lowCodeChartInstance) createLowCodeChart();
+            if (tabId === 'specialized' && !window.specializedChartInstance) createSpecializedChart();
+        });
+    });
+    
+    // Initial section display based on hash or default to #accueil
+    const initialHash = window.location.hash || '#accueil';
+    navigateToSection(initialHash);
+    // Ensure the correct tab is also shown if the hash points into a tabbed section
+    if (initialHash === '#solutions') {
+        // Default to 'lowcode' tab or could be more specific if needed
+        solutionsTabButtons.forEach(btn => {
+          if(btn.dataset.tab === 'lowcode') btn.click(); else btn.classList.remove('active');
+        });
+        solutionsTabContents.forEach(content => content.id === 'lowcode' ? content.classList.add('active') : content.classList.remove('active'));
+
+    } else { // If not #solutions, ensure solution tabs are reset or correctly hidden
+        solutionsTabContents.forEach(content => {
+            if (content.id !== 'lowcode') { // or your default tab
+                 content.classList.remove('active');
+                 content.classList.add('hidden');
+            } else {
+                 content.classList.add('active');
+                 content.classList.remove('hidden');
+            }
+        });
+    }
+
+
+    // Chart.js label wrapping function
+    function wrapLabels(label, maxWidth) {
+        const words = label.split(' ');
+        let line = '';
+        const lines = [];
+        for (let i = 0; i < words.length; i++) {
+            const testLine = line + words[i] + ' ';
+            if (testLine.length > maxWidth && i > 0) {
+                lines.push(line.trim());
+                line = words[i] + ' ';
+            } else {
+                line = testLine;
+            }
+        }
+        lines.push(line.trim());
+        return lines;
+    }
+
+    // Chart configurations
+    const commonChartOptions = (titleText) => ({
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            title: {
+                display: true,
+                text: titleText,
+                font: { size: 18, weight: 'bold' },
+                padding: { top: 10, bottom: 20 }
+            },
+            legend: {
+                position: 'top',
+                labels: { font: { size: 12 } }
+            },
+            tooltip: {
+                backgroundColor: 'rgba(0,0,0,0.8)',
+                titleFont: { size: 14, weight: 'bold' },
+                bodyFont: { size: 12 },
+                callbacks: {
+                    label: function(context) {
+                        let label = context.dataset.label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        if (context.parsed.y !== null) {
+                            label += context.parsed.y;
+                        }
+                        // Could add qualitative interpretation here if needed
+                        // Example: if (context.dataset.qualitative) label += ` (${context.dataset.qualitative[context.dataIndex]})`;
+                        return label;
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: { 
+                    stepSize: 1, // For scores 1-3 or 1-5
+                    font: { size: 12 },
+                    callback: function(value) {
+                        // Example mapping numbers back to qualitative for ticks if needed
+                        // const mapping = {1: 'Faible', 2: 'Moyen', 3: 'Élevé'};
+                        // return mapping[value] || value;
+                        return value;
+                    }
+                }
+            },
+            x: {
+                ticks: { 
+                    font: { size: 12 },
+                    callback: function(value) {
+                        return wrapLabels(this.getLabelForValue(value), 10); // Wrap X-axis labels
+                    }
+                }
+            }
+        }
+    });
+    
+    window.lowCodeChartInstance = null;
+    function createLowCodeChart() {
+        if (window.lowCodeChartInstance) {
+            window.lowCodeChartInstance.destroy();
+        }
+        const ctxLowCode = document.getElementById('lowCodeChart')?.getContext('2d');
+        if (!ctxLowCode) return;
+
+        // Qualitative scores mapped to numbers: Faible=1, Moyen=2, Élevé=3
+        // PowerAutomate: Gestion Modèle Complexe (Limité/Faible=1), Logique Conditionnelle (Limitée/Faible=1)
+        // n8n: Gestion Modèle Complexe (Moyen=2 via externe), Logique Conditionnelle (Moyen=2 via externe)
+        // Langflow: Gestion Modèle Complexe (Non natif/Très Faible=0.5), Logique Conditionnelle (Très Faible=0.5 via externe)
+        window.lowCodeChartInstance = new Chart(ctxLowCode, {
+            type: 'bar',
+            data: {
+                labels: ['Power Automate', 'n8n', 'Langflow'],
+                datasets: [
+                    {
+                        label: 'Gestion Modèle Complexe (100p)',
+                        data: [1, 2, 0.5],
+                        backgroundColor: 'rgba(79, 70, 229, 0.6)', // Indigo
+                        borderColor: 'rgba(79, 70, 229, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Support Logique Conditionnelle',
+                        data: [1, 2, 0.5],
+                        backgroundColor: 'rgba(5, 150, 105, 0.6)', // Emerald
+                        borderColor: 'rgba(5, 150, 105, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: commonChartOptions('Comparaison des Plateformes Low-Code/No-Code (Scores Relatifs)')
+        });
+    }
+
+    window.specializedChartInstance = null;
+    function createSpecializedChart() {
+        if (window.specializedChartInstance) {
+            window.specializedChartInstance.destroy();
+        }
+        const ctxSpecialized = document.getElementById('specializedChart')?.getContext('2d');
+        if (!ctxSpecialized) return;
+
+        // Scores relatifs (1=Bas/Limité, 2=Moyen, 3=Élevé/Bon)
+        const specializedData = {
+            labels: ['Logique Conditionnelle', 'Tables Dynamiques', 'Gestion Clauses', 'Intégration e-Sign', 'Workflows Approb.'],
+            datasets: [
+                {
+                    label: 'DocuSign Gen',
+                    data: [3, 3, 2.5, 3, 2.5], // Score pour Gestion Clauses (via CLM) et Workflows (via Salesforce Flow)
+                    borderColor: 'rgba(126, 34, 206, 1)', // Purple
+                    backgroundColor: 'rgba(126, 34, 206, 0.2)',
+                    pointBackgroundColor: 'rgba(126, 34, 206, 1)',
+                },
+                {
+                    label: 'Conga Composer',
+                    data: [3, 2.5, 3, 3, 2.5], // Score pour Tables (implicite), Workflows (via CLM)
+                    borderColor: 'rgba(219, 39, 119, 1)', // Pink
+                    backgroundColor: 'rgba(219, 39, 119, 0.2)',
+                    pointBackgroundColor: 'rgba(219, 39, 119, 1)',
+                },
+                {
+                    label: 'Plumsail Docs',
+                    data: [3, 3, 2, 3, 2], // Score pour Gestion Clauses (via templates), Workflows (via Power Automate)
+                    borderColor: 'rgba(16, 185, 129, 1)', // Emerald
+                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                    pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+                }
+            ]
+        };
+        window.specializedChartInstance = new Chart(ctxSpecialized, {
+            type: 'radar',
+            data: specializedData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: { display: true, text: 'Analyse Comparative des Plateformes Spécialisées', font: { size: 18, weight: 'bold'}, padding: {top: 10, bottom: 20} },
+                    legend: { position: 'top', labels: { font: { size: 12 }}},
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.raw}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    r: {
+                        angleLines: { display: true },
+                        suggestedMin: 0,
+                        suggestedMax: 3, // Max score
+                        pointLabels: { 
+                            font: { size: 10 },
+                             callback: function(value) {
+                                return wrapLabels(value, 12); // Wrap point labels
+                            }
+                        },
+                        ticks: { stepSize: 1 }
+                    }
+                },
+                elements: {
+                    line: { borderWidth: 2 },
+                    point: { radius: 3 }
+                }
+            }
+        });
+    }
+    
+    // Cost Visualizer
+    const solutionTypeCostSelect = document.getElementById('solutionTypeCost');
+    const initialCostSpan = document.getElementById('initialCost');
+    const ongoingCostSpan = document.getElementById('ongoingCost');
+
+    const costData = {
+        lowcode: { initial: '$', ongoing: '$' },
+        saas: { initial: '$$', ongoing: '$$$' },
+        custom: { initial: '$$$$', ongoing: '$$' }
+    };
+
+    function updateCostVisualizer() {
+        const selectedType = solutionTypeCostSelect.value;
+        initialCostSpan.textContent = costData[selectedType].initial;
+        ongoingCostSpan.textContent = costData[selectedType].ongoing;
+    }
+    if(solutionTypeCostSelect) {
+      solutionTypeCostSelect.addEventListener('change', updateCostVisualizer);
+      updateCostVisualizer(); // Initial call
+    }
+
+
+    // Initialize charts on page load if their containers are visible
+    window.addEventListener('load', () => {
+        const activeSolutionTab = document.querySelector('.solutions-tab-content.active');
+        if (document.getElementById('lowCodeChart')?.closest('.solutions-tab-content.active')) {
+             createLowCodeChart();
+        }
+        if (document.getElementById('specializedChart')?.closest('.solutions-tab-content.active')) {
+            createSpecializedChart();
+        }
+    });
+
+</script>
+</body>
+</html>
